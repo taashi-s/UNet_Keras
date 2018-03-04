@@ -12,11 +12,11 @@ def dice_coef(y_true, y_pred):
     y_true = Kbackend.flatten(y_true)
     y_pred = Kbackend.flatten(y_pred)
     intersection = Kbackend.sum(y_true * y_pred)
-    return 2.0 * intersection / (Kbackend.sum(y_true) + Kbackend.sum(y_pred) + 1)
+    return (2.0 * intersection + 1) / (Kbackend.sum(y_true) + Kbackend.sum(y_pred) + 1)
 
 
 def dice_coef_loss(y_true, y_pred):
-    return 1.0 - dice_coef(y_true, y_pred)
+    return -dice_coef(y_true, y_pred)
 
 
 def load_images(dir_name):
@@ -38,9 +38,11 @@ def train():
 
     network = UNet()
     model = network.model()
-    model.compile(Adam(), dice_coef_loss, [dice_coef], )
+    # model.compile(Adam(), dice_coef_loss, metrics=[dice_coef])
+    model.compile(optimizer='adam', loss=dice_coef_loss, metrics=[dice_coef])
+    # model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy'])
 
-    model.fit(inputs, teachers, 5, 100, 1)
+    model.fit(inputs, teachers, batch_size=5, epochs=100, verbose=2)
     model.save_weights(os.path.join('..', 'Model', 'cat_detect_model.hdf5'))
 
 

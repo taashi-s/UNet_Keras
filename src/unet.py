@@ -1,6 +1,6 @@
 from keras.models import Model
 from keras.layers import Input
-from keras.layers.convolutional import Conv2D, UpSampling2D, Cropping2D
+from keras.layers.convolutional import Conv2D, UpSampling2D, Cropping2D, Conv2DTranspose
 from keras.layers.pooling import MaxPooling2D
 from keras.layers.merge import concatenate
 
@@ -18,13 +18,19 @@ class UNet(object):
 
         decodeLayer1 = self.__add_Decode_layers(
             512, encodeLayer5, encodeLayer4)
+        print(decodeLayer1.shape)
         decodeLayer2 = self.__add_Decode_layers(
             256, decodeLayer1, encodeLayer3)
+        print(decodeLayer2.shape)
         decodeLayer3 = self.__add_Decode_layers(
             128, decodeLayer2, encodeLayer2)
+        print(decodeLayer3.shape)
         decodeLayer4 = self.__add_Decode_layers(64, decodeLayer3, encodeLayer1)
+        print(decodeLayer4.shape)
 
         outputs = Conv2D(1, 1, activation='relu')(decodeLayer4)
+        # outputs = Conv2DTranspose(1, 3, strides=1, activation='relu')(decodeLayer4)
+        print(outputs.shape)
 
         self.MODEL = Model(inputs=inputs, outputs=outputs)
 
@@ -47,10 +53,9 @@ class UNet(object):
         crop_h = (concatLayerShape[2] - layerShape[2]) // 2
         concatLayer = Cropping2D((crop_w, crop_h))(concatLayer)
 
-        layer = concatenate([layer, concatLayer], axis=3)
+        layer = concatenate([layer, concatLayer])
         layer = Conv2D(filters, 3, activation='relu')(layer)
         layer = Conv2D(filters, 3, activation='relu')(layer)
-        layer = MaxPooling2D(2)(layer)
         return layer
 
     def model(self):
