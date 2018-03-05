@@ -44,7 +44,7 @@ def train():
     model = network.model()
     model.compile(optimizer='adam', loss=dice_coef_loss, metrics=[dice_coef])
 
-    model.fit(inputs, teachers, batch_size=1, epochs=100, verbose=2)
+    model.fit(inputs, teachers, batch_size=1, epochs=20, verbose=2)
     model.save_weights(os.path.join('..', 'Model', 'cat_detect_model.hdf5'))
 
 
@@ -55,10 +55,15 @@ def predict():
     model.load_weights(os.path.join('..', 'Model', 'cat_detect_model.hdf5'))
     preds = model.predict(inputs, 5)
 
-    for pred, file_name in enumerate(preds, file_names):
+    for _, (pred, file_name) in enumerate(zip(preds, file_names)):
         name = os.path.basename(file_name)
+        (w, h, _) = pred.shape
+        pred = np.reshape(pred, (w, h))
         distImg = Image.fromarray(pred * 255)
-        distImg.save(os.path.join('..', 'Outputs', name))
+        distImg = distImg.convert('RGB')
+        save_path = os.path.join('..', 'Outputs', name)
+        distImg.save(save_path, "png")
+        print(save_path)
 
 
 if __name__ == '__main__':
