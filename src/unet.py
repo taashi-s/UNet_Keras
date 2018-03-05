@@ -1,5 +1,6 @@
 from keras.models import Model
 from keras.layers import Input
+from keras.layers.core import Flatten, Dense, Reshape
 from keras.layers.convolutional import Conv2D, UpSampling2D, Cropping2D, Conv2DTranspose
 from keras.layers.pooling import MaxPooling2D
 from keras.layers.merge import concatenate
@@ -28,11 +29,14 @@ class UNet(object):
         decodeLayer4 = self.__add_Decode_layers(64, decodeLayer3, encodeLayer1)
         print(decodeLayer4.shape)
 
-        outputs = Conv2D(1, 1, activation='relu')(decodeLayer4)
-        # outputs = Conv2DTranspose(1, 3, strides=1, activation='relu')(decodeLayer4)
+        outputs = Conv2D(1, 1, activation='sigmoid')(decodeLayer4)
+        outputs = Flatten()(outputs)
+        outputs = Dense(572*572*1)(outputs)
+        outputs = Reshape((572, 572, 1))(outputs)
+
         print(outputs.shape)
 
-        self.MODEL = Model(inputs=inputs, outputs=outputs)
+        self.MODEL = Model(inputs=[inputs], outputs=[outputs])
 
     def __add_Encode_layers(self, filters, inputLayer, is_first=False):
         layer = inputLayer
