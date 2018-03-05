@@ -7,18 +7,21 @@ from keras.layers.merge import concatenate
 
 
 class UNet(object):
-    def __init__(self):
+    def __init__(self, input_size):
+        self.INPUT_SIZE = input_size
 
-        inputs = Input((572, 572, 1))
+        inputs = Input((self.INPUT_SIZE, self.INPUT_SIZE, 1))
 
         encodeLayer1 = self.__add_Encode_layers(64, inputs, is_first=True)
         encodeLayer2 = self.__add_Encode_layers(128, encodeLayer1)
         encodeLayer3 = self.__add_Encode_layers(256, encodeLayer2)
         encodeLayer4 = self.__add_Encode_layers(512, encodeLayer3)
-        encodeLayer5 = self.__add_Encode_layers(1024, encodeLayer4)
+        # encodeLayer5 = self.__add_Encode_layers(1024, encodeLayer4)
+        encodeLayer5 = encodeLayer4
 
-        decodeLayer1 = self.__add_Decode_layers(
-            512, encodeLayer5, encodeLayer4)
+        # decodeLayer1 = self.__add_Decode_layers(
+        #     512, encodeLayer5, encodeLayer4)
+        decodeLayer1 = encodeLayer5
         print(decodeLayer1.shape)
         decodeLayer2 = self.__add_Decode_layers(
             256, decodeLayer1, encodeLayer3)
@@ -30,9 +33,12 @@ class UNet(object):
         print(decodeLayer4.shape)
 
         outputs = Conv2D(1, 1, activation='sigmoid')(decodeLayer4)
-        outputs = Flatten()(outputs)
-        outputs = Dense(572*572*1)(outputs)
-        outputs = Reshape((572, 572, 1))(outputs)
+
+        outputLayerShape = outputs.get_shape().as_list()
+        if (outputLayerShape[1], outputLayerShape[2]) != (self.INPUT_SIZE, self.INPUT_SIZE):
+            outputs = Flatten()(outputs)
+            outputs = Dense(self.INPUT_SIZE*self.INPUT_SIZE*1)(outputs)
+            outputs = Reshape((self.INPUT_SIZE, self.INPUT_SIZE, 1))(outputs)
 
         print(outputs.shape)
 
@@ -42,7 +48,7 @@ class UNet(object):
         layer = inputLayer
         if is_first:
             layer = Conv2D(filters, 3, activation='relu',
-                           input_shape=(572, 572, 1))(layer)
+                           input_shape=(self.INPUT_SIZE, self.INPUT_SIZE, 1))(layer)
         else:
             layer = MaxPooling2D(2)(layer)
             layer = Conv2D(filters, 3, activation='relu')(layer)
@@ -53,9 +59,18 @@ class UNet(object):
         layer = UpSampling2D(2)(inputLayer)
         layerShape = layer.get_shape().as_list()
         concatLayerShape = concatLayer.get_shape().as_list()
-        crop_w = (concatLayerShape[1] - layerShape[1]) // 2
-        crop_h = (concatLayerShape[2] - layerShape[2]) // 2
-        concatLayer = Cropping2D((crop_w, crop_h))(concatLayer)
+        diff_w = concatLayerShape[1] - layerShape[1]
+        diff_h = concatLayerShape[2] - layerShape[2]
+        crop_l = diff_w // 2
+        crop_t = diff_h // 2
+        crop_r = crop_l
+        if crop_l != (diff_w / 2):
+            crop_r = crop_r + 1
+        crop_b = crop_t
+        if crop_t != (diff_h / 2):
+            crop_b = crop_b + 1
+        concatLayer = Cropping2D(
+            ((crop_t, crop_b), (crop_l, crop_r)))(concatLayer)
 
         layer = concatenate([layer, concatLayer])
         layer = Conv2D(filters, 3, activation='relu')(layer)
