@@ -2,6 +2,7 @@ import os
 import glob
 import numpy as np
 from PIL import Image
+from matplotlib import pyplot
 from keras.optimizers import Adam
 import keras.backend as Kbackend
 
@@ -9,6 +10,11 @@ from unet import UNet
 
 INPUT_IMAGE_SIZE = 128
 TEACHER_IMAGE_SIZE = 36
+BATCH_SIZE = 5
+EPOCHS = 20000
+
+DIR_MODEL = os.path.join('..', 'Model')
+DIR_OUTPUTS = os.path.join('..', 'Outputs')
 
 
 def dice_coef(y_true, y_pred):
@@ -44,8 +50,20 @@ def train():
     model = network.model()
     model.compile(optimizer='adam', loss=dice_coef_loss, metrics=[dice_coef])
 
-    model.fit(inputs, teachers, batch_size=1, epochs=20, verbose=2)
-    model.save_weights(os.path.join('..', 'Model', 'cat_detect_model.hdf5'))
+    history = model.fit(
+        inputs, teachers, batch_size=BATCH_SIZE, epochs=EPOCHS, verbose=2)
+    model.save_weights(os.path.join(DIR_MODEL, 'cat_detect_model.hdf5'))
+
+    x = range(EPOCHS)
+#    plt.plot(x, stack.history['acc'], label="acc")
+#    plt.title("accuracy")
+#    plt.legend(loc='center left', bbox_to_anchor=(1, 0.5))
+#    plt.show()
+
+    pyplot.plot(x, history.history['loss'], label="loss")
+    pyplot.title("loss")
+    pyplot.legend(loc='center left', bbox_to_anchor=(1, 0.5))
+    pyplot.show()
 
 
 def predict():
@@ -53,7 +71,7 @@ def predict():
         os.path.join('..', 'Inputs'), INPUT_IMAGE_SIZE)
     network = UNet(INPUT_IMAGE_SIZE)
     model = network.model()
-    model.load_weights(os.path.join('..', 'Model', 'cat_detect_model.hdf5'))
+    model.load_weights(os.path.join(DIR_MODEL, 'cat_detect_model.hdf5'))
     preds = model.predict(inputs, 5)
 
     for _, (pred, file_name) in enumerate(zip(preds, file_names)):
@@ -62,11 +80,13 @@ def predict():
         pred = np.reshape(pred, (w, h))
         distImg = Image.fromarray(pred * 255)
         distImg = distImg.convert('RGB')
-        save_path = os.path.join('..', 'Outputs', name)
+        save_path = os.path.join(DIR_OUTPUTS, name)
         distImg.save(save_path, "png")
         print(save_path)
 
 
 if __name__ == '__main__':
+    os.mkdir(DIR_MODEL)
+    os.mkdir(DIR_OUTPUTS)
     train()
     predict()
