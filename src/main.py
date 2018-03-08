@@ -8,6 +8,7 @@ import keras.backend as Kbackend
 from unet import UNet
 
 INPUT_IMAGE_SIZE = 128
+TEACHER_IMAGE_SIZE = 36
 
 
 def dice_coef(y_true, y_pred):
@@ -21,24 +22,23 @@ def dice_coef_loss(y_true, y_pred):
     return -dice_coef(y_true, y_pred)
 
 
-def load_images(dir_name):
+def load_images(dir_name, size):
     files = glob.glob(os.path.join(dir_name, '*.png'))
     files.sort()
-    images = np.zeros((len(files), INPUT_IMAGE_SIZE,
-                       INPUT_IMAGE_SIZE, 1), 'float32')
+    images = np.zeros((len(files), size, size, 1), 'float32')
     for i, file in enumerate(files):
         srcImg = Image.open(file)
         distImg = srcImg.convert('L')
         imgArray = np.asarray(distImg)
         imgArray = np.reshape(
-            imgArray, (INPUT_IMAGE_SIZE, INPUT_IMAGE_SIZE, 1))
+            imgArray, (size, size, 1))
         images[i] = imgArray / 255
     return (files, images)
 
 
 def train():
-    (_, inputs) = load_images(os.path.join('..', 'Inputs'))
-    (_, teachers) = load_images(os.path.join('..', 'Teachers'))
+    (_, inputs) = load_images(os.path.join('..', 'Inputs'), INPUT_IMAGE_SIZE)
+    (_, teachers) = load_images(os.path.join('..', 'Teachers'), TEACHER_IMAGE_SIZE)
 
     network = UNet(INPUT_IMAGE_SIZE)
     model = network.model()
@@ -49,7 +49,8 @@ def train():
 
 
 def predict():
-    (file_names, inputs) = load_images(os.path.join('..', 'Inputs'))
+    (file_names, inputs) = load_images(
+        os.path.join('..', 'Inputs'), INPUT_IMAGE_SIZE)
     network = UNet(INPUT_IMAGE_SIZE)
     model = network.model()
     model.load_weights(os.path.join('..', 'Model', 'cat_detect_model.hdf5'))

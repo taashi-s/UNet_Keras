@@ -34,11 +34,11 @@ class UNet(object):
 
         outputs = Conv2D(1, 1, activation='sigmoid')(decodeLayer4)
 
-        outputLayerShape = outputs.get_shape().as_list()
-        if (outputLayerShape[1], outputLayerShape[2]) != (self.INPUT_SIZE, self.INPUT_SIZE):
-            outputs = Flatten()(outputs)
-            outputs = Dense(self.INPUT_SIZE*self.INPUT_SIZE*1)(outputs)
-            outputs = Reshape((self.INPUT_SIZE, self.INPUT_SIZE, 1))(outputs)
+#        outputLayerShape = outputs.get_shape().as_list()
+#        if (outputLayerShape[1], outputLayerShape[2]) != (self.INPUT_SIZE, self.INPUT_SIZE):
+#            outputs = Flatten()(outputs)
+#            outputs = Dense(self.INPUT_SIZE*self.INPUT_SIZE*1)(outputs)
+#            outputs = Reshape((self.INPUT_SIZE, self.INPUT_SIZE, 1))(outputs)
 
         print(outputs.shape)
 
