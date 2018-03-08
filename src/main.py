@@ -86,7 +86,9 @@ def predict():
 
 
 if __name__ == '__main__':
-    os.mkdir(DIR_MODEL)
-    os.mkdir(DIR_OUTPUTS)
+    if not(os.path.exists(DIR_MODEL)):
+        os.mkdir(DIR_MODEL)
+    if not(os.path.exists(DIR_OUTPUTS)):
+        os.mkdir(DIR_OUTPUTS)
     train()
     predict()
