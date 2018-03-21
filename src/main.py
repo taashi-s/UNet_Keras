@@ -12,7 +12,7 @@ from unet_n import UNet_n
 INPUT_IMAGE_SIZE = 128
 TEACHER_IMAGE_SIZE = 128
 BATCH_SIZE = 5
-EPOCHS = 250
+EPOCHS = 100
 
 DIR_MODEL = os.path.join('..', 'Model')
 DIR_INPUTS = os.path.join('..', 'Inputs')
@@ -68,9 +68,8 @@ def train():
     pyplot.show()
 
 
-def predict():
-    #    (file_names, inputs) = load_images(DIR_INPUTS, INPUT_IMAGE_SIZE)
-    (file_names, inputs) = load_images(DIR_TESTS, INPUT_IMAGE_SIZE)
+def predict(input_dir):
+    (file_names, inputs) = load_images(input_dir, INPUT_IMAGE_SIZE)
 #    network = UNet(INPUT_IMAGE_SIZE)
     network = UNet_n(INPUT_IMAGE_SIZE)
     model = network.model()
@@ -93,5 +92,6 @@ if __name__ == '__main__':
         os.mkdir(DIR_MODEL)
     if not(os.path.exists(DIR_OUTPUTS)):
         os.mkdir(DIR_OUTPUTS)
-#    train()
-    predict()
+    train()
+    predict(DIR_INPUTS)
+    predict(DIR_TESTS)

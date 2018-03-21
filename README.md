@@ -4,4 +4,6 @@ unusing UpSampling2D, using Conv2DTranspose/ZeroPadding2D, and add BatchNormaliz
 
 ## Current problem
 ```
+- Overfitting (?) when 200 epochs
+
 ```
