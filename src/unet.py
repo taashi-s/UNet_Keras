@@ -11,6 +11,7 @@ class UNet(object):
         self.INPUT_SIZE = input_size
 
         inputs = Input((self.INPUT_SIZE, self.INPUT_SIZE, 1))
+        print(inputs.shape)
 
         encodeLayer1 = self.__add_Encode_layers(64, inputs, is_first=True)
         encodeLayer2 = self.__add_Encode_layers(128, encodeLayer1)
@@ -22,15 +23,11 @@ class UNet(object):
         # decodeLayer1 = self.__add_Decode_layers(
         #     512, encodeLayer5, encodeLayer4)
         decodeLayer1 = encodeLayer5
-        print(decodeLayer1.shape)
         decodeLayer2 = self.__add_Decode_layers(
             256, decodeLayer1, encodeLayer3)
-        print(decodeLayer2.shape)
         decodeLayer3 = self.__add_Decode_layers(
             128, decodeLayer2, encodeLayer2)
-        print(decodeLayer3.shape)
         decodeLayer4 = self.__add_Decode_layers(64, decodeLayer3, encodeLayer1)
-        print(decodeLayer4.shape)
 
         outputs = Conv2D(1, 1, activation='sigmoid')(decodeLayer4)
 
@@ -53,6 +50,7 @@ class UNet(object):
             layer = MaxPooling2D(2)(layer)
             layer = Conv2D(filters, 3, activation='relu')(layer)
         layer = Conv2D(filters, 3, activation='relu')(layer)
+        print(layer.shape)
         return layer
 
     def __add_Decode_layers(self, filters, inputLayer, concatLayer):
@@ -75,6 +73,7 @@ class UNet(object):
         layer = concatenate([layer, concatLayer])
         layer = Conv2D(filters, 3, activation='relu')(layer)
         layer = Conv2D(filters, 3, activation='relu')(layer)
+        print(layer.shape)
         return layer
 
     def model(self):

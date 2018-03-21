@@ -7,11 +7,12 @@ from keras.optimizers import Adam
 import keras.backend as Kbackend
 
 from unet import UNet
+from unet_n import UNet_n
 
 INPUT_IMAGE_SIZE = 128
 TEACHER_IMAGE_SIZE = 36
 BATCH_SIZE = 5
-EPOCHS = 20000
+EPOCHS = 20
 
 DIR_MODEL = os.path.join('..', 'Model')
 DIR_OUTPUTS = os.path.join('..', 'Outputs')
@@ -21,11 +22,11 @@ def dice_coef(y_true, y_pred):
     y_true = Kbackend.flatten(y_true)
     y_pred = Kbackend.flatten(y_pred)
     intersection = Kbackend.sum(y_true * y_pred)
-    return (2.0 * intersection + 1) / (Kbackend.sum(y_true) + Kbackend.sum(y_pred) + 1)
+    return 2.0 * intersection / (Kbackend.sum(y_true) + Kbackend.sum(y_pred) + 1)
 
 
 def dice_coef_loss(y_true, y_pred):
-    return -dice_coef(y_true, y_pred)
+    return 1.0 - dice_coef(y_true, y_pred)
 
 
 def load_images(dir_name, size):
@@ -46,20 +47,16 @@ def train():
     (_, inputs) = load_images(os.path.join('..', 'Inputs'), INPUT_IMAGE_SIZE)
     (_, teachers) = load_images(os.path.join('..', 'Teachers'), TEACHER_IMAGE_SIZE)
 
-    network = UNet(INPUT_IMAGE_SIZE)
+#    network = UNet(INPUT_IMAGE_SIZE)
+    network = UNet_n(INPUT_IMAGE_SIZE)
     model = network.model()
     model.compile(optimizer='adam', loss=dice_coef_loss, metrics=[dice_coef])
 
     history = model.fit(
-        inputs, teachers, batch_size=BATCH_SIZE, epochs=EPOCHS, verbose=2)
+        inputs, teachers, batch_size=BATCH_SIZE, epochs=EPOCHS, verbose=1)
     model.save_weights(os.path.join(DIR_MODEL, 'cat_detect_model.hdf5'))
 
     x = range(EPOCHS)
-#    plt.plot(x, stack.history['acc'], label="acc")
-#    plt.title("accuracy")
-#    plt.legend(loc='center left', bbox_to_anchor=(1, 0.5))
-#    plt.show()
-
     pyplot.plot(x, history.history['loss'], label="loss")
     pyplot.title("loss")
     pyplot.legend(loc='center left', bbox_to_anchor=(1, 0.5))
@@ -79,7 +76,7 @@ def predict():
         (w, h, _) = pred.shape
         pred = np.reshape(pred, (w, h))
         distImg = Image.fromarray(pred * 255)
-        distImg = distImg.convert('RGB')
+        distImg = distImg.convert('L')
         save_path = os.path.join(DIR_OUTPUTS, name)
         distImg.save(save_path, "png")
         print(save_path)
