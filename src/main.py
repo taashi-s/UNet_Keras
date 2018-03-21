@@ -12,7 +12,7 @@ from unet_n import UNet_n
 INPUT_IMAGE_SIZE = 128
 TEACHER_IMAGE_SIZE = 128
 BATCH_SIZE = 5
-EPOCHS = 100
+EPOCHS = 50
 
 DIR_MODEL = os.path.join('..', 'Model')
 DIR_INPUTS = os.path.join('..', 'Inputs')
