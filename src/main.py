@@ -5,6 +5,7 @@ from keras.optimizers import Adam
 from unet import UNet
 from dice_coefficient import dice_coef_loss, dice_coef
 from images_loader import load_images, save_images
+from option_parser import get_option
 
 
 INPUT_IMAGE_SIZE = 128
@@ -26,7 +27,7 @@ def train():
 
     network = UNet(INPUT_IMAGE_SIZE)
     model = network.model()
-    model.compile(optimizer='adam', loss=dice_coef_loss, metrics=[dice_coef])
+    model.compile(optimizer='adam', loss=dice_coef_loss)
 
     history = model.fit(
         inputs, teachers, batch_size=BATCH_SIZE, epochs=EPOCHS, verbose=1)
@@ -54,6 +55,9 @@ def predict(input_dir):
 
 
 if __name__ == '__main__':
+    args = get_option(EPOCHS)
+    EPOCHS = args.epoch
+
     if not(os.path.exists(DIR_MODEL)):
         os.mkdir(DIR_MODEL)
     if not(os.path.exists(DIR_OUTPUTS)):
