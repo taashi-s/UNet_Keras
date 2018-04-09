@@ -3,3 +3,10 @@
 ## Current problem
 ```
 ```
+
+## memo
+
+- BatchNormalization
+
+- Dropout
+
