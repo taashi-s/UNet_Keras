@@ -2,11 +2,13 @@ import os
 from matplotlib import pyplot
 from keras.optimizers import Adam
 import keras.callbacks as KC
+import math
 
 from unet import UNet
 from dice_coefficient import DiceLossByClass
 from images_loader import load_images, save_images
 from option_parser import get_option
+from data_generator import DataGenerator
 
 
 CLASS_NUM = 3
@@ -44,6 +46,34 @@ def train():
     plotLearningCurve(history)
 
 
+def train_with_generator():
+    network = UNet(INPUT_IMAGE_SHAPE, CLASS_NUM)
+    model = network.model()
+    model.compile(optimizer='adam', loss=DiceLossByClass().dice_coef_loss)
+
+    callbacks = [ KC.TensorBoard()
+                ]
+
+    train_generator = DataGenerator(DIR_INPUTS, DIR_INPUTS, INPUT_IMAGE_SHAPE)
+    train_data_num = train_generator.data_size()
+
+
+    print('fix ...')
+    his = model.fit_generator(train_generator.generator(batch_size=BATCH_SIZE)
+                              , steps_per_epoch=math.ceil(train_data_num / BATCH_SIZE)
+                              , epochs=EPOCHS
+                              , verbose=1
+                              , use_multiprocessing=True
+                              , callbacks=callbacks
+                              #, validation_data=valid_generator
+                              #, validation_steps=math.ceil(valid_data_num / BATCH_SIZE)
+                             )
+    print('model saveing ...')
+    model.save_weights(os.path.join(DIR_MODEL, File_MODEL))
+    print('... saved')
+    plotLearningCurve(his)
+
+
 def plotLearningCurve(history):
     """ saveLearningCurve """
     x = range(EPOCHS)
@@ -51,8 +81,6 @@ def plotLearningCurve(history):
     pyplot.title("loss")
     pyplot.legend(loc='center left', bbox_to_anchor=(1, 0.5))
     lc_name = 'LearningCurve'
-    if surfix is not None:
-        lc_name += '_' + surfix
     pyplot.savefig(lc_name + '.png')
     pyplot.close()
 
@@ -77,7 +105,8 @@ if __name__ == '__main__':
     if not(os.path.exists(DIR_OUTPUTS)):
         os.mkdir(DIR_OUTPUTS)
 
-    train()
+    #train()
+    train_with_generator()
 
     #predict(DIR_INPUTS)
     #predict(DIR_TESTS)
