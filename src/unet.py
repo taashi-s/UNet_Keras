@@ -8,10 +8,11 @@ from keras.layers.normalization import BatchNormalization
 
 
 class UNet(object):
-    def __init__(self, input_size):
-        self.INPUT_SIZE = input_size
+    def __init__(self, input_shape, class_num):
+        self.INPUT_SHAPE = input_shape
+        self.CLASS_NUM = class_num
 
-        inputs = Input((self.INPUT_SIZE, self.INPUT_SIZE, 1))
+        inputs = Input(self.INPUT_SHAPE)
         print(inputs.shape)
 
         encodeLayer1 = self.__add_encode_layers(64, inputs, is_first=True)
@@ -29,7 +30,7 @@ class UNet(object):
         decodeLayer4 = self.__add_decode_layers(
             64, decodeLayer3, encodeLayer1)
 
-        outputs = Conv2D(1, 1, activation='sigmoid')(decodeLayer4)
+        outputs = Conv2D(class_num, 1, activation='sigmoid')(decodeLayer4)
         print(outputs.shape)
 
         self.MODEL = Model(inputs=[inputs], outputs=[outputs])
@@ -37,8 +38,7 @@ class UNet(object):
     def __add_encode_layers(self, filter_size, input_layer, is_first=False):
         layer = input_layer
         if is_first:
-            layer = Conv2D(filter_size, 3, padding='same', input_shape=(
-                self.INPUT_SIZE, self.INPUT_SIZE, 1))(layer)
+            layer = Conv2D(filter_size, 3, padding='same', input_shape=self.INPUT_SHAPE)(layer)
         else:
             layer = MaxPooling2D(2)(layer)
             layer = Conv2D(filter_size, 3, padding='same')(layer)
