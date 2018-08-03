@@ -11,8 +11,8 @@ from option_parser import get_option
 
 CLASS_NUM = 3
 INPUT_IMAGE_SHAPE = (256, 256, CLASS_NUM)
-BATCH_SIZE = 5
-EPOCHS = 10
+BATCH_SIZE = 20
+EPOCHS = 100
 
 DIR_MODEL = os.path.join('..', 'model')
 DIR_INPUTS = os.path.join('..', 'inputs')
@@ -33,7 +33,7 @@ def train():
 
     network = UNet(INPUT_IMAGE_SHAPE, CLASS_NUM)
     model = network.model()
-    model.compile(optimizer='adam', loss=DiceLossByClass().dice_coef_loss)
+    model.compile(optimizer='adam', loss=DiceLossByClass(INPUT_IMAGE_SHAPE, CLASS_NUM).dice_coef_loss)
 
     callbacks = [ KC.TensorBoard()
                 ]
@@ -51,8 +51,6 @@ def plotLearningCurve(history):
     pyplot.title("loss")
     pyplot.legend(loc='center left', bbox_to_anchor=(1, 0.5))
     lc_name = 'LearningCurve'
-    if surfix is not None:
-        lc_name += '_' + surfix
     pyplot.savefig(lc_name + '.png')
     pyplot.close()
 
