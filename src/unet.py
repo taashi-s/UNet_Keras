@@ -13,7 +13,6 @@ class UNet(object):
         self.CLASS_NUM = class_num
 
         inputs = Input(self.INPUT_SHAPE)
-        print(inputs.shape)
 
         encodeLayer1 = self.__add_encode_layers(64, inputs, is_first=True)
         encodeLayer2 = self.__add_encode_layers(128, encodeLayer1)
@@ -31,7 +30,6 @@ class UNet(object):
             64, decodeLayer3, encodeLayer1)
 
         outputs = Conv2D(class_num, 1, activation='sigmoid')(decodeLayer4)
-        print(outputs.shape)
 
         self.MODEL = Model(inputs=[inputs], outputs=[outputs])
 
@@ -45,7 +43,6 @@ class UNet(object):
         layer = Conv2D(filter_size, 3, padding='same')(layer)
         layer = BatchNormalization()(layer)
         layer = Activation(activation='relu')(layer)
-        print(layer.shape)
         return layer
 
     def __add_decode_layers(self, filter_size, input_layer, concat_layer, add_drop_layer=False):
@@ -57,7 +54,6 @@ class UNet(object):
         layer = Activation(activation='relu')(layer)
         if add_drop_layer:
             layer = Dropout(0.5)(layer)
-        print(layer.shape)
         return layer
 
     def model(self):
