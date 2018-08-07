@@ -3,6 +3,7 @@ import glob
 import cv2
 import random
 import numpy as np
+import time
 
 import images_loader as iml
 
@@ -34,6 +35,35 @@ class DataGenerator():
         return len(self.__data_names)
 
 
+    def generate_data(self, target_data_list=None):
+        data_list = self.__data_names
+        if target_data_list is not None:
+            data_list = target_data_list
+
+        data_num = len(data_list)
+        start = time.time()
+        prev_time = start
+
+        input_list = []
+        teacher_list = []
+        random.shuffle(data_list)
+        for k, name in enumerate(data_list):
+            input_img, teacher_img = self.load_data(name)
+            if input_img is None or teacher_img is None:
+                continue
+
+            input_list.append(input_img)
+            teacher_list.append(teacher_img)
+            if k % 200 == 0 or k == data_num - 1:
+                now_time = time.time()
+                print('## generate : ', '%05d' % k, '/', '%05d' % data_num, ' %5.3f(%5.3f)' % (now_time - prev_time, now_time - start))
+                prev_time = now_time
+
+        inputs = [np.array(input_list)]
+        teachers = [np.array(teacher_list)]
+        return inputs, teachers
+
+
     def generator(self, batch_size=None, target_data_list=None):
         """
         keras data generator
@@ -54,11 +84,7 @@ class DataGenerator():
                     input_list = []
                     teacher_list = []
 
-                input_path = os.path.join(self.__input_dir, name)
-                teacher_path = os.path.join(self.__teacher_dir, name)
-                input_img = iml.load_image(input_path, self.__image_shape, with_normalize=True)
-                teacher_img = iml.load_image(teacher_path, self.__image_shape, with_normalize=True)
-
+                input_img, teacher_img = self.load_data(name)
                 if input_img is None or teacher_img is None:
                     continue
 
@@ -75,3 +101,13 @@ class DataGenerator():
 
                     yield inputs, teachers
 
+
+    def load_data(self, name):
+        input_path = os.path.join(self.__input_dir, name)
+        teacher_path = os.path.join(self.__teacher_dir, name)
+        input_img = iml.load_image(input_path, self.__image_shape, with_normalize=True)
+        #teacher_img = iml.load_image(teacher_path, self.__image_shape, with_normalize=True)
+        teacher_shape = (self.__image_shape[0], self.__image_shape[1], 1)
+        teacher_img = iml.load_image(teacher_path, teacher_shape, with_normalize=True)
+        #teacher_img = iml.load_image(teacher_path, teacher_shape, with_normalize=True, is_binary=True)
+        return input_img, teacher_img

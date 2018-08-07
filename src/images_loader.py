@@ -47,5 +47,6 @@ def save_images(dir_name, image_data_list, file_name_list):
         #distImg = distImg.convert('RGB')
         save_path = os.path.join(dir_name, name)
         #distImg.save(save_path, "png")
-        cv2.imwrite(image_data * 255, save_path)
+        img = (image_data * 255).astype(np.uint8)
+        cv2.imwrite(save_path, img)
         print('saved : ' , save_path)
