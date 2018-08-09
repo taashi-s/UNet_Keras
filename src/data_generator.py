@@ -9,10 +9,17 @@ import images_loader as iml
 
 
 class DataGenerator():
-    def __init__(self, input_dir, teacher_dir, image_shape):
+    def __init__(self, input_dir, teacher_dir, image_shape, include_padding=None):
       self.__input_dir = input_dir
       self.__teacher_dir = teacher_dir
-      self.__image_shape = image_shape
+      self.__padding = (0, 0)
+      if isinstance(include_padding, tuple):
+          self.__padding = include_padding
+
+      h, w, c = image_shape
+      h_pad, w_pad = self.__padding
+      self.__image_shape = (h - (h_pad * 2), w - (w_pad * 2), c)
+      
       self.__update_data_names()
 
 
@@ -61,6 +68,9 @@ class DataGenerator():
 
         inputs = [np.array(input_list)]
         teachers = [np.array(teacher_list)]
+
+        #print('inputs : ', np.shape(inputs), ', teachers : ', np.shape(teachers))
+
         return inputs, teachers
 
 
@@ -95,19 +105,25 @@ class DataGenerator():
                     inputs = [np.array(input_list)]
                     teachers = [np.array(teacher_list)]
 
-                    # print('')
-                    # for k, inp in enumerate(inputs):
-                    #    print('input(', k, ')>>> ', np.shape(inp))
-
                     yield inputs, teachers
-
 
     def load_data(self, name):
         input_path = os.path.join(self.__input_dir, name)
         teacher_path = os.path.join(self.__teacher_dir, name)
         input_img = iml.load_image(input_path, self.__image_shape, with_normalize=True)
         #teacher_img = iml.load_image(teacher_path, self.__image_shape, with_normalize=True)
-        teacher_shape = (self.__image_shape[0], self.__image_shape[1], 1)
+        teacher_shape = self.__image_shape # (self.__image_shape[0], self.__image_shape[1], 1)
         teacher_img = iml.load_image(teacher_path, teacher_shape, with_normalize=True)
-        #teacher_img = iml.load_image(teacher_path, teacher_shape, with_normalize=True, is_binary=True)
+        #h, w, _ = teacher_shape
+        #teacher_img[0, :, :] = 1
+        #teacher_img[h - 1, :, :] = 1
+        #teacher_img[:, 0, :] = 1
+        #teacher_img[:, w - 1, :] = 1
+        input_img = self.padding_data(input_img, 0)
+        teacher_img = self.padding_data(teacher_img, 1)
         return input_img, teacher_img
+
+
+    def padding_data(self, data, padding_val):
+        h_pad, w_pad = self.__padding
+        return np.pad(data, [(h_pad, h_pad), (w_pad, w_pad), (0, 0)], 'constant', constant_values=padding_val)

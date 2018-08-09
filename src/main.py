@@ -1,8 +1,9 @@
 import os
+import numpy as np
 from matplotlib import pyplot
 from keras.optimizers import Adam
 import keras.callbacks as KC
-from keras.utils import multi_gpu_model
+from keras.utils import multi_gpu_model, plot_model
 import math
 
 from unet import UNet
@@ -13,8 +14,9 @@ from data_generator import DataGenerator
 from history_checkpoint_callback import HistoryCheckpoint
 
 
-CLASS_NUM = 1
-INPUT_IMAGE_SHAPE = (256, 256, 3)
+CLASS_NUM = 3
+PADDING = 1
+INPUT_IMAGE_SHAPE = (256 + (PADDING * 2), 256 + (PADDING * 2), 3)
 BATCH_SIZE = 20
 EPOCHS = 1000
 GPU_NUM = 4
@@ -22,7 +24,8 @@ GPU_NUM = 4
 DIR_MODEL = os.path.join('..', 'model')
 DIR_INPUTS = os.path.join('..', 'inputs')
 DIR_OUTPUTS = os.path.join('..', 'outputs')
-DIR_TEACHERS = os.path.join('..', 'teachers_gray')
+#DIR_TEACHERS = os.path.join('..', 'teachers_gray')
+DIR_TEACHERS = os.path.join('..', 'teachers')
 DIR_TESTS = os.path.join('..', 'predict_data')
 
 File_MODEL = 'segmentation_model.hdf5'
@@ -51,7 +54,7 @@ def train(gpu_num=None):
                 ]
 
     print('data generating ...')
-    train_generator = DataGenerator(DIR_INPUTS, DIR_TEACHERS, INPUT_IMAGE_SHAPE)
+    train_generator = DataGenerator(DIR_INPUTS, DIR_TEACHERS, INPUT_IMAGE_SHAPE, include_padding=(PADDING, PADDING))
     inputs, teachers = train_generator.generate_data()
     print('... data generated')
 
@@ -114,20 +117,26 @@ def plotLearningCurve(history):
 
 
 def predict(input_dir, gpu_num=None):
-    (file_names, inputs) = load_images(input_dir, INPUT_IMAGE_SHAPE)
+    h, w, c = INPUT_IMAGE_SHAPE
+    org_h, org_w = h - (PADDING * 2), w - (PADDING * 2)
+    (file_names, inputs) = load_images(input_dir, (org_h, org_w, c))
+    inputs = np.pad(inputs, [(0, 0), (PADDING, PADDING), (PADDING, PADDING), (0, 0)], 'constant', constant_values=0)
 
     network = UNet(INPUT_IMAGE_SHAPE, CLASS_NUM)
 
     model = network.model()
+    plot_model(model, to_file='../model_plot.png')
+    model.summary()
     if isinstance(gpu_num, int):
         model = multi_gpu_model(model, gpus=gpu_num)
-    model.summary()
     model.load_weights(os.path.join(DIR_MODEL, File_MODEL))
     print('predicting ...')
     preds = model.predict(inputs, BATCH_SIZE)
     print('... predicted')
 
     print('output saveing ...')
+    preds = preds[:, PADDING:org_h, PADDING:org_w, :]
+
     save_images(DIR_OUTPUTS, preds, file_names)
     print('... saved')
 
@@ -141,8 +150,8 @@ if __name__ == '__main__':
     if not(os.path.exists(DIR_OUTPUTS)):
         os.mkdir(DIR_OUTPUTS)
 
-    #train(gpu_num=GPU_NUM)
+    train(gpu_num=GPU_NUM)
     #train_with_generator(gpu_num=GPU_NUM)
 
     #predict(DIR_INPUTS)
-    predict(DIR_TESTS, gpu_num=GPU_NUM)
+    #predict(DIR_TESTS, gpu_num=GPU_NUM)

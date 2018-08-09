@@ -19,7 +19,7 @@ def load_images(dir_name, image_shape, with_normalize=True):
     return (files, np.array(images, dtype=np.float32))
 
 
-def load_image(file_name, image_shape, with_normalize=True):
+def load_image(file_name, image_shape, with_normalize=True, is_binary=False):
     #src_img = Image.open(file)
     #dist_img = src_img.convert('L')
     #img_array = np.asarray(dist_img)
@@ -30,8 +30,19 @@ def load_image(file_name, image_shape, with_normalize=True):
         return None
 
     dist_img = src_img
-    if image_shape[2] == 1:
+    if not is_binary and image_shape[2] == 1:
         dist_img = cv2.cvtColor(dist_img, cv2.COLOR_BGR2GRAY)
+
+    if is_binary:
+        h, w, ch = np.shape(dist_img)
+        dist_img_tmp = np.zeros((h, w, 1))
+        for h_ in range(h):
+            for w_ in range(w):
+                if dist_img[h_][w_][0] == 0 and dist_img[h_][w_][1] == 0 and dist_img[h_][w_][2] == 0:
+                    continue
+                dist_img_tmp[h_][w_] = 255
+        dist_img = dist_img_tmp
+
     dist_img = cv2.resize(dist_img, (image_shape[0], image_shape[1]))
     if with_normalize:
         dist_img = dist_img / 255
@@ -47,6 +58,11 @@ def save_images(dir_name, image_data_list, file_name_list):
         #distImg = distImg.convert('RGB')
         save_path = os.path.join(dir_name, name)
         #distImg.save(save_path, "png")
-        img = (image_data * 255).astype(np.uint8)
-        cv2.imwrite(save_path, img)
-        print('saved : ' , save_path)
+        save_image(image_data, save_path, with_unnormalize=True)
+
+def save_image(image_data, save_path, with_unnormalize=True):
+    if with_unnormalize:
+        image_data *= 255
+    img = image_data.astype(np.uint8)
+    cv2.imwrite(save_path, img)
+    print('saved : ' , save_path)
