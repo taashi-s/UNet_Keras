@@ -46,7 +46,7 @@ class DiceLossByClass():
 
         losses = []
         for y_t, y_p in zip(y_trues, y_preds):
-            losses.append((1 - self.dice_coef(y_t, y_p)))
+            losses.append((1 - self.dice_coef(y_t, y_p))*3)
 
         # return tf.reduce_mean(tf.stack(losses))
         return tf.reduce_sum(tf.stack(losses))

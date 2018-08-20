@@ -24,7 +24,7 @@ class UNet(object):
             layer = self.__add_encode_layers(filters, layer, is_first=(k==0))
             encodeLayers.append(layer)
 
-        add_drop_layer_indexes = [2, 3]
+        add_drop_layer_indexes = [1, 2, 3]
         deconv_item = zip(reversed(filters_list[:-1]), reversed(encodeLayers[:-1]))
         for k, (filters, concat_layer) in enumerate(deconv_item):
             layer = self.__add_decode_layers(filters, layer, concat_layer
