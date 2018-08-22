@@ -132,8 +132,7 @@ def predict(input_dir, gpu_num=None):
     print('... predicted')
 
     print('output saveing ...')
-    preds = preds[:, PADDING:org_h, PADDING:org_w, :]
-
+    preds = preds[:, PADDING:org_h+PADDING, PADDING:org_w+PADDING, :]
     save_images(DIR_OUTPUTS, preds, file_names)
     print('... saved')
 
