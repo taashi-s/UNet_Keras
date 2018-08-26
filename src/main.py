@@ -15,9 +15,9 @@ from history_checkpoint_callback import HistoryCheckpoint
 
 
 CLASS_NUM = 3
-PADDING = 1
+PADDING = 0
 INPUT_IMAGE_SHAPE = (256 + (PADDING * 2), 256 + (PADDING * 2), 3)
-BATCH_SIZE = 45
+BATCH_SIZE = 80 # 45
 EPOCHS = 1000
 GPU_NUM = 4
 
@@ -30,11 +30,9 @@ DIR_VALID_INPUTS = os.path.join(DIR_BASE, 'valid_inputs')
 DIR_VALID_TEACHERS = os.path.join(DIR_BASE, 'valid_teachers')
 DIR_OUTPUTS = os.path.join(DIR_BASE, 'outputs')
 DIR_TEST = os.path.join(DIR_BASE, 'predict_data')
-#DIR_PREDICTS = os.path.join(DIR_BASE, 'predict_data')
-DIR_PREDICTS = os.path.join(DIR_BASE, 'predict_data_new')
+DIR_PREDICTS = os.path.join(DIR_BASE, 'predict_data')
 
-#File_MODEL = 'segmentation_model.hdf5'
-File_MODEL = 'segmentation_model_11520_all.hdf5'
+File_MODEL = 'segmentation_model.hdf5'
 
 def train(gpu_num=None, with_generator=False, load_model=False, show_info=True):
     print('network creating ... ')#, end='', flush=True)
@@ -146,8 +144,8 @@ if __name__ == '__main__':
     if not(os.path.exists(DIR_OUTPUTS)):
         os.mkdir(DIR_OUTPUTS)
 
-    #train(gpu_num=GPU_NUM, with_generator=False, load_model=False)
+    train(gpu_num=GPU_NUM, with_generator=False, load_model=False)
     #train(gpu_num=GPU_NUM, with_generator=True, load_model=False)
 
     #predict(DIR_INPUTS, gpu_num=GPU_NUM)
-    predict(DIR_PREDICTS, gpu_num=GPU_NUM)
+    #predict(DIR_PREDICTS, gpu_num=GPU_NUM)
