@@ -61,6 +61,10 @@ def save_images(dir_name, image_data_list, file_name_list):
         #save_path = os.path.join(dir_name, name_base + '_origin' + ext)
         save_path = os.path.join(dir_name, name_base + ext)
         save_image(image_data, save_path, with_unnormalize=True)
+
+        save_path = os.path.join(dir_name, name_base + '_th20' + ext)
+        save_image(image_data, save_path, with_unnormalize=True, binary_threshold=20)
+
         for c in range(3):
             save_path = os.path.join(dir_name, name_base + ('_color%d' % c) + ext)
             image_data_tmp = np.zeros(np.shape(image_data))

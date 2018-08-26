@@ -119,8 +119,11 @@ class DataGenerator():
         #teacher_img[h - 1, :, :] = 1
         #teacher_img[:, 0, :] = 1
         #teacher_img[:, w - 1, :] = 1
-        input_img = self.padding_data(input_img, 0)
-        teacher_img = self.padding_data(teacher_img, 1)
+
+        teacher_img[teacher_img == 0] = 10 / 255
+
+#        input_img = self.padding_data(input_img, 0)
+#        teacher_img = self.padding_data(teacher_img, 1)
         return input_img, teacher_img
 
 
