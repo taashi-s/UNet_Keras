@@ -15,7 +15,7 @@ from history_checkpoint_callback import HistoryCheckpoint
 
 
 CLASS_NUM = 3
-PADDING = 0
+PADDING = 1
 INPUT_IMAGE_SHAPE = (256 + (PADDING * 2), 256 + (PADDING * 2), 3)
 BATCH_SIZE = 80 # 45
 EPOCHS = 1000

@@ -114,13 +114,13 @@ class DataGenerator():
         #teacher_img = iml.load_image(teacher_path, self.__image_shape, with_normalize=True)
         teacher_shape = self.__image_shape # (self.__image_shape[0], self.__image_shape[1], 1)
         teacher_img = iml.load_image(teacher_path, teacher_shape, with_normalize=True)
-        h, w, _ = teacher_shape
-        teacher_img[0, :, :] = 1
-        teacher_img[h - 1, :, :] = 1
-        teacher_img[:, 0, :] = 1
-        teacher_img[:, w - 1, :] = 1
-#        input_img = self.padding_data(input_img, 0)
-#        teacher_img = self.padding_data(teacher_img, 1)
+        #h, w, _ = teacher_shape
+        #teacher_img[0, :, :] = 1
+        #teacher_img[h - 1, :, :] = 1
+        #teacher_img[:, 0, :] = 1
+        #teacher_img[:, w - 1, :] = 1
+        input_img = self.padding_data(input_img, 0)
+        teacher_img = self.padding_data(teacher_img, 1)
         return input_img, teacher_img
 
 
