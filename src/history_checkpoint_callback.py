@@ -28,7 +28,8 @@ class HistoryCheckpoint(KC.Callback):
         self.__period = period
         self.__epochs_since_last_save = 0
         self.__history_callback = KC.History()
-        self.__targets = [TargetHistory.Loss]
+        #self.__targets = [TargetHistory.Loss]
+        self.__targets = [TargetHistory.Loss, TargetHistory.ValidationLoss]
         if isinstance(targets, list):
             self.__targets = targets
         self.__is_each = is_each

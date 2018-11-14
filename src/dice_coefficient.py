@@ -44,9 +44,12 @@ class DiceLossByClass():
         y_trues = tf.unstack(y_true_res, axis=3)
         y_preds = tf.unstack(y_pred_res, axis=3)
 
+        ratios = [3] * len(y_trues)
+        ratios[2] = 5
         losses = []
-        for y_t, y_p in zip(y_trues, y_preds):
-            losses.append((1 - self.dice_coef(y_t, y_p))*3)
+        for y_t, y_p, ratio in zip(y_trues, y_preds, ratios):
+            losses.append((1 - self.dice_coef(y_t, y_p))*ratio)
+            #losses.append((1 - self.dice_coef(y_t, y_p))*1)
 
         # return tf.reduce_mean(tf.stack(losses))
         return tf.reduce_sum(tf.stack(losses))

@@ -10,12 +10,13 @@ def load_images(dir_name, image_shape, with_normalize=True):
     files.sort()
     h, w, ch = image_shape
     images = []
-    print ('load_images : ', len(files))
+    print ('load_images : ', len(files), ' in ', dir_name)
     for i, file in enumerate(files):
         img = load_image(file, image_shape, with_normalize=with_normalize)
         images.append(img)
         if i % 500 == 0:
-            print('load_images loaded ', i)
+#            print('load_images loaded ', i)
+            pass
     return (files, np.array(images, dtype=np.float32))
 
 
@@ -61,11 +62,11 @@ def save_images(dir_name, image_data_list, file_name_list):
         #save_path = os.path.join(dir_name, name_base + '_origin' + ext)
         save_path = os.path.join(dir_name, name_base + ext)
         save_image(image_data, save_path, with_unnormalize=True)
-        for c in range(3):
-            save_path = os.path.join(dir_name, name_base + ('_color%d' % c) + ext)
-            image_data_tmp = np.zeros(np.shape(image_data))
-            image_data_tmp[:, :, c] = image_data[:, :, c]
-            save_image(image_data_tmp, save_path, with_unnormalize=True)
+        #for c in range(3):
+        #    save_path = os.path.join(dir_name, name_base + ('_color%d' % c) + ext)
+        #    image_data_tmp = np.zeros(np.shape(image_data))
+        #    image_data_tmp[:, :, c] = image_data[:, :, c]
+        #    save_image(image_data_tmp, save_path, with_unnormalize=True)
         for th in ths:
             save_path = os.path.join(dir_name, name_base + ('_th%03d' % th) + ext)
             #distImg.save(save_path, "png")
@@ -81,4 +82,4 @@ def save_image(image_data_org, save_path, with_unnormalize=True, binary_threshol
         image_data[image_data != 0] = 255
     img = image_data.astype(np.uint8)
     cv2.imwrite(save_path, img)
-    print('saved : ' , save_path)
+#    print('saved : ' , save_path)
