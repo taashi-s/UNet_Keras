@@ -5,8 +5,3 @@
 ```
 
 ## memo
-
-- BatchNormalization
-
-- Dropout
-
