@@ -38,7 +38,7 @@ DIR_LEARN_INPUTS = os.path.join(DIR_BASE, 'learn_inputs' + SUFIX)
 DIR_LEARN_OUTPUTS = os.path.join(DIR_BASE, 'learn_outputs' + SUFIX)
 
 
-File_MODEL = 'Model_2019_0714_1030_full_layer_train_only_weights.hdf5'
+File_MODEL = 'Model_2019_0714_1030_only_shallow_layer_train_only_weights.hdf5'
 
 def train(gpu_num=None, with_generator=False, load_model=False, show_info=True):
     print('network creating ... ')#, end='', flush=True)
