@@ -15,27 +15,30 @@ from data_generator import DataGenerator
 from history_checkpoint_callback import HistoryCheckpoint
 
 
-CLASS_NUM = 3
-PADDING = 1
-INPUT_IMAGE_SHAPE = (512 + (PADDING * 2), 512 + (PADDING * 2), 3)
-BATCH_SIZE = 32
+CLASS_NUM = 1
+PADDING = 0
+INPUT_IMAGE_SHAPE = (256 + (PADDING * 2), 256 + (PADDING * 2), 3)
+BATCH_SIZE = 250
 EPOCHS = 500
-GPU_NUM = 4
+GPU_NUM = 8
 
 
 SUFIX = ''
 DIR_BASE = os.path.join('.', '..')
 DIR_MODEL = os.path.join(DIR_BASE, 'model')
-DIR_TRAIN_INPUTS = os.path.join(DIR_BASE, 'inputs' + SUFIX)
-DIR_TRAIN_TEACHERS = os.path.join(DIR_BASE, 'teachers' + SUFIX)
-DIR_VALID_INPUTS = os.path.join(DIR_BASE, 'valid_inputs' + SUFIX)
-DIR_VALID_TEACHERS = os.path.join(DIR_BASE, 'valid_teachers' + SUFIX)
+DIR_TRAIN_INPUTS = os.path.join(DIR_BASE, 'Train_inputs' + SUFIX)
+DIR_TRAIN_TEACHERS = os.path.join(DIR_BASE, 'Train_teachers' + SUFIX)
+DIR_VALID_INPUTS = os.path.join(DIR_BASE, 'Valid_inputs' + SUFIX)
+DIR_VALID_TEACHERS = os.path.join(DIR_BASE, 'Valid_teachers' + SUFIX)
 DIR_OUTPUTS = os.path.join(DIR_BASE, 'outputs' + SUFIX)
 DIR_TEST = os.path.join(DIR_BASE, 'predict_data')
 DIR_PREDICTS = os.path.join(DIR_BASE, 'predict_data' + SUFIX)
-#DIR_PREDICTS = os.path.join(DIR_BASE, 'predict_data_new')
 
-File_MODEL = 'segmentation_model.hdf5'
+DIR_LEARN_INPUTS = os.path.join(DIR_BASE, 'learn_inputs' + SUFIX)
+DIR_LEARN_OUTPUTS = os.path.join(DIR_BASE, 'learn_outputs' + SUFIX)
+
+
+File_MODEL = 'BoxSide_2019_0714_1030_full_layer_train_only_weights.hdf5'
 
 def train(gpu_num=None, with_generator=False, load_model=False, show_info=True):
     print('network creating ... ')#, end='', flush=True)
@@ -47,38 +50,51 @@ def train(gpu_num=None, with_generator=False, load_model=False, show_info=True):
         model.summary()
     if isinstance(gpu_num, int):
         model = multi_gpu_model(model, gpus=gpu_num)
-    model.compile(optimizer='adam', loss=DiceLossByClass(INPUT_IMAGE_SHAPE, CLASS_NUM).dice_coef_loss)
 
-    model_filename=os.path.join(DIR_MODEL, File_MODEL)
-    callbacks = [ KC.TensorBoard()
-                , HistoryCheckpoint(filepath='LearningCurve_{history}.png'
-                                    , verbose=1
-                                    , period=5
-                                   )
-                , KC.ModelCheckpoint(filepath=model_filename
-                                     , verbose=1
-                                     , save_weights_only=True
-                                     , save_best_only=True
-                                     , period=5
-                                    )
-                ]
-
+    model_filename = os.path.join(DIR_MODEL, File_MODEL)
+    model_filename_best = os.path.join(DIR_MODEL, File_MODEL[:-5] + '_best.hdf5')
     if load_model:
         print('loading weghts ... ', end='', flush=True)
         model.load_weights(model_filename)
-        print('... loaded') 
+        print('... loaded')
+
+    model.compile(optimizer=Adam(lr=0.001), loss=DiceLossByClass(INPUT_IMAGE_SHAPE, CLASS_NUM).dice_coef_loss)
+
+    callbacks = [ KC.TensorBoard()
+                , HistoryCheckpoint(filepath='LearningCurve_{history}.png'
+                                    , verbose=1
+                                    , period=2
+                                   )
+                , KC.ModelCheckpoint(filepath=model_filename_best
+                                     , verbose=1
+                                     , save_weights_only=True
+                                     , save_best_only=True
+                                     , period=2
+                                    )
+                , KC.ModelCheckpoint(filepath=model_filename
+                                     , verbose=1
+                                     , save_weights_only=True
+                                     , save_best_only=False
+                                     , period=2
+                                    )
+                ]
 
     print('data generating ...', end='', flush=True)
-    train_generator = DataGenerator(DIR_TRAIN_INPUTS, DIR_TRAIN_TEACHERS, INPUT_IMAGE_SHAPE
+    train_generator = DataGenerator(DIR_TRAIN_INPUTS, DIR_TRAIN_TEACHERS, INPUT_IMAGE_SHAPE, CLASS_NUM
                                     , include_padding=(PADDING, PADDING))
-    valid_generator = DataGenerator(DIR_VALID_INPUTS, DIR_VALID_TEACHERS, INPUT_IMAGE_SHAPE
+    valid_generator = DataGenerator(DIR_VALID_INPUTS, DIR_VALID_TEACHERS, INPUT_IMAGE_SHAPE, CLASS_NUM
                                     , include_padding=(PADDING, PADDING))
     print('... created')
 
     if with_generator:
         train_data_num = train_generator.data_size()
         valid_data_num = valid_generator.data_size()
+        ### tmp : supress step >>>
+        #supress_step = 100
+        #print('supress step : ', math.ceil(train_data_num / BATCH_SIZE), ' --> ', supress_step)
+        ### tmp : supress step <<<
         history = model.fit_generator(train_generator.generator(batch_size=BATCH_SIZE)
+                                      #, steps_per_epoch=supress_step#math.ceil(train_data_num / BATCH_SIZE)
                                       , steps_per_epoch=math.ceil(train_data_num / BATCH_SIZE)
                                       , epochs=EPOCHS
                                       , verbose=1
@@ -114,7 +130,7 @@ def train(gpu_num=None, with_generator=False, load_model=False, show_info=True):
     model.save_weights(model_filename)
     print('... saved')
     print('learning_curve saveing ... ', end='', flush=True)
-    save_learning_curve(history)
+    #save_learning_curve(history)
     print('... saved')
 
 
@@ -129,12 +145,20 @@ def save_learning_curve(history):
     pyplot.close()
 
 
-def predict(input_dir, gpu_num=None):
+def predict(input_dir, gpu_num=None, out_dir=None, is_suppress=False):
     start_t = time.time()
     h, w, c = INPUT_IMAGE_SHAPE
     org_h, org_w = h - (PADDING * 2), w - (PADDING * 2)
     (file_names, inputs) = load_images(input_dir, (org_h, org_w, c))
     inputs = np.pad(inputs, [(0, 0), (PADDING, PADDING), (PADDING, PADDING), (0, 0)], 'constant', constant_values=0)
+
+    if is_suppress:
+        ###### tmp : data suppress
+        bfo_suppress_count = len(file_names)
+        data_suppress_num = 20
+        file_names = file_names[:data_suppress_num] + file_names[-data_suppress_num:]
+        inputs = inputs[:data_suppress_num] + inputs[-data_suppress_num:]
+        print('aft suppress : ', bfo_suppress_count, ' --> ', len(file_names))
 
     network = UNet(INPUT_IMAGE_SHAPE, CLASS_NUM)
     create_net_t = time.time()
@@ -155,6 +179,9 @@ def predict(input_dir, gpu_num=None):
     predict_times = []
     save_times = []
 
+    if out_dir is None:
+        out_dir = DIR_OUTPUTS
+
     target_zip = zip(inputs, file_names)
     for inp, fname in target_zip:
         pred_start_t = time.time()
@@ -164,7 +191,7 @@ def predict(input_dir, gpu_num=None):
  
         save_start_t = time.time()
         preds = preds[:, PADDING:org_h+PADDING, PADDING:org_w+PADDING, :]
-        save_images(DIR_OUTPUTS, preds, [fname])
+        save_images(out_dir, preds, [fname])
         save_finish_t = time.time()
         predict_times.append(pred_finish_t - pred_start_t)
         save_times.append(save_finish_t- save_start_t)
@@ -216,49 +243,9 @@ if __name__ == '__main__':
     if not(os.path.exists(DIR_OUTPUTS)):
         os.mkdir(DIR_OUTPUTS)
 
-    #train(gpu_num=GPU_NUM, with_generator=False, load_model=False)
+    train(gpu_num=GPU_NUM, with_generator=False, load_model=True)
     #train(gpu_num=GPU_NUM, with_generator=True, load_model=False)
 
-    #predict(DIR_INPUTS, gpu_num=GPU_NUM)
-    predict(DIR_PREDICTS, gpu_num=GPU_NUM)
+    #predict(DIR_LEARN_INPUTS, gpu_num=GPU_NUM, out_dir=DIR_LEARN_OUTPUTS)
+    #predict(DIR_PREDICTS, gpu_num=GPU_NUM)
 
-    """
-    time_cre_n = []
-    time_loa_w = []
-    time_mak_p = []
-    time_1st_p = []
-    time_ave_p = []
-    time_min_p = []
-    time_max_p = []
-    time_ave_s = []
-    time_min_s = []
-    time_max_s = []
-    time_total = []
-    p_loops = 100
-    for i in range(p_loops):
-        print('@@@@@@@@@@@@@@ [%04d] ' % i)
-        times = predict(DIR_PREDICTS, gpu_num=GPU_NUM)
-        time_cre_n.append(times[0])
-        time_loa_w.append(times[1])
-        time_mak_p.append(times[2])
-        time_1st_p.append(times[3])
-        time_ave_p.append(times[4])
-        time_min_p.append(times[5])
-        time_max_p.append(times[6])
-        time_ave_s.append(times[7])
-        time_min_s.append(times[8])
-        time_max_s.append(times[9])
-        time_total.append(times[10])
-
-    print('-------------------')
-    print('##### Predict Times (average) [target files : ', len(file_names), '] * ', p_loops, ' loops')
-    def ave(arr):
-        return np.average(np.array(arr))
-    print('create_net : ', ave(time_cre_n))
-    print('model.load_weights : ', ave(time_loa_w))
-    print('model._make_predict_function : ', ave(time_mak_p))
-    print('model.predict 1st call: ', ave(time_1st_p))
-    print('model.predict average: ', ave(time_ave_p), ' [', ave(time_min_p), ' - ', ave(time_max_p), ']')
-    print('save_images average : ', ave(time_ave_s), ' [', ave(time_min_s), ' - ', ave(time_max_s), ']')
-    print('total : ', ave(time_total))
-    """

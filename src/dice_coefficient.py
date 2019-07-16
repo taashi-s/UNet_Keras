@@ -45,7 +45,6 @@ class DiceLossByClass():
         y_preds = tf.unstack(y_pred_res, axis=3)
 
         ratios = [3] * len(y_trues)
-        ratios[2] = 5
         losses = []
         for y_t, y_p, ratio in zip(y_trues, y_preds, ratios):
             losses.append((1 - self.dice_coef(y_t, y_p))*ratio)

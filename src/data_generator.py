@@ -9,7 +9,7 @@ import images_loader as iml
 
 
 class DataGenerator():
-    def __init__(self, input_dir, teacher_dir, image_shape, include_padding=None):
+    def __init__(self, input_dir, teacher_dir, image_shape, teacher_channel, include_padding=None):
       self.__input_dir = input_dir
       self.__teacher_dir = teacher_dir
       self.__padding = (0, 0)
@@ -19,6 +19,7 @@ class DataGenerator():
       h, w, c = image_shape
       h_pad, w_pad = self.__padding
       self.__image_shape = (h - (h_pad * 2), w - (w_pad * 2), c)
+      self.__teacher_channel = teacher_channel
       
       self.__update_data_names()
 
@@ -112,7 +113,7 @@ class DataGenerator():
         teacher_path = os.path.join(self.__teacher_dir, name)
         input_img = iml.load_image(input_path, self.__image_shape, with_normalize=True)
         #teacher_img = iml.load_image(teacher_path, self.__image_shape, with_normalize=True)
-        teacher_shape = self.__image_shape # (self.__image_shape[0], self.__image_shape[1], 1)
+        teacher_shape = (self.__image_shape[0], self.__image_shape[1], self.__teacher_channel)
         teacher_img = iml.load_image(teacher_path, teacher_shape, with_normalize=True)
         #h, w, _ = teacher_shape
         #teacher_img[0, :, :] = 1
@@ -126,4 +127,6 @@ class DataGenerator():
 
     def padding_data(self, data, padding_val):
         h_pad, w_pad = self.__padding
+        if h_pad == 0 and w_pad == 0:
+            return data
         return np.pad(data, [(h_pad, h_pad), (w_pad, w_pad), (0, 0)], 'constant', constant_values=padding_val)
