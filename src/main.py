@@ -243,7 +243,7 @@ if __name__ == '__main__':
     if not(os.path.exists(DIR_OUTPUTS)):
         os.mkdir(DIR_OUTPUTS)
 
-    train(gpu_num=GPU_NUM, with_generator=False, load_model=True)
+    train(gpu_num=GPU_NUM, with_generator=False, load_model=False)
     #train(gpu_num=GPU_NUM, with_generator=True, load_model=False)
 
     #predict(DIR_LEARN_INPUTS, gpu_num=GPU_NUM, out_dir=DIR_LEARN_OUTPUTS)
