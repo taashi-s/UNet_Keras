@@ -38,7 +38,7 @@ DIR_LEARN_INPUTS = os.path.join(DIR_BASE, 'learn_inputs' + SUFIX)
 DIR_LEARN_OUTPUTS = os.path.join(DIR_BASE, 'learn_outputs' + SUFIX)
 
 
-File_MODEL = 'Model_2019_0714_1030_only_shallow_layer_train_only_weights.hdf5'
+File_MODEL = 'Model_2019_0714_2230_add_deep_layer_train_only_weights.hdf5'
 
 def train(gpu_num=None, with_generator=False, load_model=False, show_info=True):
     print('network creating ... ')#, end='', flush=True)
@@ -78,6 +78,17 @@ def train(gpu_num=None, with_generator=False, load_model=False, show_info=True):
                                      , period=2
                                     )
                 ]
+
+    #if load_model:
+    #    print('loading weghts ... ', end='', flush=True)
+    #    model.load_weights(model_filename)
+    #    print('... loaded') 
+
+    ##########
+    print(model.layers)
+    print('')
+    print('.done')
+    return
 
     print('data generating ...', end='', flush=True)
     train_generator = DataGenerator(DIR_TRAIN_INPUTS, DIR_TRAIN_TEACHERS, INPUT_IMAGE_SHAPE, CLASS_NUM

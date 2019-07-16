@@ -19,8 +19,7 @@ class UNet(object):
         if filters_list is None:
             filters_list = [32, 64, 128, 256, 512]
         if trainable_list is None:
-            #trainable_list = [True, True, True, True, True]
-            trainable_list = [True, True, True, False, False]
+            trainable_list = [False, False, False, True, True]
         layer = inputs
         encodeLayers = []
         for k, (filters, trainable) in enumerate(zip(filters_list, trainable_list)):
