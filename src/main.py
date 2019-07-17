@@ -19,7 +19,7 @@ CLASS_NUM = 1
 PADDING = 0
 INPUT_IMAGE_SHAPE = (256 + (PADDING * 2), 256 + (PADDING * 2), 3)
 BATCH_SIZE = 250
-EPOCHS = 500
+EPOCHS = 600
 GPU_NUM = 8
 
 
@@ -38,11 +38,16 @@ DIR_LEARN_INPUTS = os.path.join(DIR_BASE, 'learn_inputs' + SUFIX)
 DIR_LEARN_OUTPUTS = os.path.join(DIR_BASE, 'learn_outputs' + SUFIX)
 
 
-File_MODEL = 'Model_2019_0714_1030_full_layer_train_only_weights.hdf5'
+File_MODEL = 'Model_2019_0716_1620_Full_layers_train_only_weights.hdf5'
+
+#FILTER_LIST = [32, 64, 128, 256, 512]
+#FILTER_LIST = [32, 64, 128]
+FILTER_LIST = [32, 64, 128, 256]
+#FILTER_LIST = [32, 64, 128, 256, 512]
 
 def train(gpu_num=None, with_generator=False, load_model=False, show_info=True):
     print('network creating ... ')#, end='', flush=True)
-    network = UNet(INPUT_IMAGE_SHAPE, CLASS_NUM)
+    network = UNet(INPUT_IMAGE_SHAPE, CLASS_NUM, filters_list=FILTER_LIST)
     print('... created')
 
     model = network.model()
@@ -160,7 +165,7 @@ def predict(input_dir, gpu_num=None, out_dir=None, is_suppress=False):
         inputs = inputs[:data_suppress_num] + inputs[-data_suppress_num:]
         print('aft suppress : ', bfo_suppress_count, ' --> ', len(file_names))
 
-    network = UNet(INPUT_IMAGE_SHAPE, CLASS_NUM)
+    network = UNet(INPUT_IMAGE_SHAPE, CLASS_NUM, filters_list=FILTER_LIST)
     create_net_t = time.time()
 
     model = network.model()
@@ -169,7 +174,8 @@ def predict(input_dir, gpu_num=None, out_dir=None, is_suppress=False):
     if isinstance(gpu_num, int):
         model = multi_gpu_model(model, gpus=gpu_num)
     load_start_t = time.time()
-    model.load_weights(os.path.join(DIR_MODEL, File_MODEL))
+    #model.load_weights(os.path.join(DIR_MODEL, File_MODEL))
+    model.load_weights(os.path.join(DIR_MODEL, File_MODEL[:-5] + '_best.hdf5'))
     load_finish_t = time.time()
 
     make_p_start_t = time.time()
@@ -246,6 +252,6 @@ if __name__ == '__main__':
     train(gpu_num=GPU_NUM, with_generator=False, load_model=False)
     #train(gpu_num=GPU_NUM, with_generator=True, load_model=False)
 
-    #predict(DIR_LEARN_INPUTS, gpu_num=GPU_NUM, out_dir=DIR_LEARN_OUTPUTS)
-    #predict(DIR_PREDICTS, gpu_num=GPU_NUM)
+    predict(DIR_LEARN_INPUTS, gpu_num=GPU_NUM, out_dir=DIR_LEARN_OUTPUTS)
+    predict(DIR_PREDICTS, gpu_num=GPU_NUM)
 
