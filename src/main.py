@@ -38,16 +38,17 @@ DIR_LEARN_INPUTS = os.path.join(DIR_BASE, 'learn_inputs' + SUFIX)
 DIR_LEARN_OUTPUTS = os.path.join(DIR_BASE, 'learn_outputs' + SUFIX)
 
 
-File_MODEL = 'Model_2019_0716_1620_Full_layers_train_only_weights.hdf5'
+File_MODEL = 'Model_2019_0716_1620_Deep_layers_train_only_weights.hdf5'
 
 #FILTER_LIST = [32, 64, 128, 256, 512]
 #FILTER_LIST = [32, 64, 128]
-FILTER_LIST = [32, 64, 128, 256]
-#FILTER_LIST = [32, 64, 128, 256, 512]
+#FILTER_LIST = [32, 64, 128, 256]
+FILTER_LIST = [32, 64, 128, 256, 512]
+TRAINABLE_LIST = [False, False, True, True, True]
 
 def train(gpu_num=None, with_generator=False, load_model=False, show_info=True):
     print('network creating ... ')#, end='', flush=True)
-    network = UNet(INPUT_IMAGE_SHAPE, CLASS_NUM, filters_list=FILTER_LIST)
+    network = UNet(INPUT_IMAGE_SHAPE, CLASS_NUM, filters_list=FILTER_LIST, trainable_list=TRAINABLE_LIST)
     print('... created')
 
     model = network.model()
@@ -165,7 +166,7 @@ def predict(input_dir, gpu_num=None, out_dir=None, is_suppress=False):
         inputs = inputs[:data_suppress_num] + inputs[-data_suppress_num:]
         print('aft suppress : ', bfo_suppress_count, ' --> ', len(file_names))
 
-    network = UNet(INPUT_IMAGE_SHAPE, CLASS_NUM, filters_list=FILTER_LIST)
+    network = UNet(INPUT_IMAGE_SHAPE, CLASS_NUM, filters_list=FILTER_LIST, trainable_list=TRAINABLE_LIST)
     create_net_t = time.time()
 
     model = network.model()
